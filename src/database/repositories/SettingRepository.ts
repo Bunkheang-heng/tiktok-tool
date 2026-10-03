@@ -43,7 +43,7 @@ export class SettingRepository {
       telegramChatId: s['TELEGRAM_CHAT_ID'] || '',
       telegramNotifyLevel: (s['TELEGRAM_NOTIFY_LEVEL'] as 'minimal' | 'normal' | 'detailed') || 'normal',
       geminiApiKey: s['GEMINI_API_KEY'] || '',
-      geminiModel: s['GEMINI_MODEL'] || 'gemini-2.0-flash',
+      geminiModel: s['GEMINI_MODEL'] || 'gemini-3.1-flash-lite',
       videoProvider: (s['VIDEO_PROVIDER'] as 'mock' | 'browser' | 'api') || 'mock',
       ttsProvider: (s['TTS_PROVIDER'] as 'mock' | 'edge' | 'google') || 'mock',
       ttsVoice: s['TTS_VOICE'] || 'km-KH-SreymomNeural',

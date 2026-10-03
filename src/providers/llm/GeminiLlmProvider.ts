@@ -3,11 +3,11 @@ import { GeneratedContentData, GeneratedContentSchema } from '../../core/types/c
 
 export class GeminiLlmProvider implements LlmProvider {
   public readonly id = 'gemini';
-  public readonly name = 'Google Gemini 2.0 Flash';
+  public readonly name = 'Google Gemini 3.1 Flash Lite';
 
   constructor(
     private apiKey: string,
-    private model: string = 'gemini-2.0-flash',
+    private model: string = 'gemini-3.1-flash-lite',
     private timeoutMs: number = 45000
   ) {}
 
