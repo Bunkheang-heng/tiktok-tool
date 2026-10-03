@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Production output
+dist/
+dist-electron/
+release/
+
+# Local storage and environment
+storage/
+.env
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
