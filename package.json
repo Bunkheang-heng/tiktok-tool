@@ -14,17 +14,21 @@
     "package:win": "vite build && electron-builder --win"
   },
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
     "dotenv": "^16.4.7",
     "lucide-react": "^1.16.0",
     "pino": "^9.6.0",
+    "playwright": "^1.63.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "sql.js": "^1.14.2",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.9",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@types/sql.js": "^1.4.11",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^34.3.0",
     "electron-builder": "^25.1.8",

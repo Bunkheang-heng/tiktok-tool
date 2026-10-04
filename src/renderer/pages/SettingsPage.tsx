@@ -203,11 +203,21 @@ export const SettingsPage: React.FC = () => {
               value={config.videoProvider}
               onChange={(e) => setConfig({ ...config, videoProvider: e.target.value })}
             >
-              <option value="mock">Mock Video Generator (Instant local placeholder)</option>
-              <option value="browser">Browser Playwright Worker (Automated video portal)</option>
-              <option value="api">Direct Video API Provider</option>
+              <option value="notebooklm">Google NotebookLM (Automated Studio Video Overview)</option>
+              <option value="browser">Browser Playwright Worker</option>
+              <option value="mock">Mock Video Generator (Offline Test)</option>
             </select>
           </div>
+          <div>
+            <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Google Notebook URL</label>
+            <input
+              type="text"
+              placeholder="https://notebook.google.com/notebook/2419265c-bfcb-4dfa-9ee8-52ad6926b5fa"
+              value={config.notebookUrl || ''}
+              onChange={(e) => setConfig({ ...config, notebookUrl: e.target.value })}
+            />
+          </div>
+
           <div>
             <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Khmer Voice / TTS</label>
             <select

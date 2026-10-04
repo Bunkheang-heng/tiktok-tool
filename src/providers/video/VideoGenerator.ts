@@ -1,6 +1,9 @@
 export interface VideoGenerationInput {
   jobId: string;
+  topic?: string;
+  topicKhmer?: string;
   prompt: string;
+  script?: string;
   aspectRatio?: '9:16' | '16:9' | '1:1';
   durationSeconds?: number;
   outputDirectory: string;

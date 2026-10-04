@@ -112,7 +112,10 @@ export class Orchestrator {
 
       const generatedVideo = await videoGenerator.generate({
         jobId,
+        topic: topic.title,
+        topicKhmer: topic.khmerTitle,
         prompt: content.videoPrompt,
+        script: content.scriptKhmer,
         aspectRatio: '9:16',
         outputDirectory: job.outputDirectory
       });
@@ -244,6 +247,28 @@ export class Orchestrator {
 
       throw err;
     }
+  }
+
+  public async cancelJob(jobId: string, reason: string = 'User cancelled'): Promise<Job> {
+    const { jobRepo, topicRepo, stateMachine, telegram } = this.deps;
+    const job = jobRepo.findById(jobId);
+    if (!job) throw new Error(`Job not found: ${jobId}`);
+
+    const topic = job.topicId ? topicRepo.findById(job.topicId) : null;
+    const updated = stateMachine.transition(jobId, 'CANCELLED', {
+      message: `Job cancelled: ${reason}`
+    });
+
+    try {
+      await telegram.sendMessage({
+        text: `🛑 *BEN10 FX: JOB CANCELLED*\n\n*Job:* \`${job.id}\`\n*Topic:* ${topic ? topic.title : 'N/A'}\n*Status:* CANCELLED\n*Reason:* ${reason}`,
+        parseMode: 'Markdown'
+      });
+    } catch (e) {
+      console.error('Failed to push job cancellation to Telegram:', e);
+    }
+
+    return updated;
   }
 
   public async resendToTelegram(jobId: string): Promise<void> {

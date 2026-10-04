@@ -7,15 +7,25 @@ import {
 import fs from 'node:fs';
 import path from 'node:path';
 
+function cleanMarkdown(str: string): string {
+  if (!str) return '';
+  return str.replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, ' ');
+}
+
 export class RealTelegramService implements TelegramService {
+  private readonly baseUrl = 'https://api.telegram.org/bot';
+  private readonly timeoutMs: number;
+
   constructor(
     private botToken: string,
-    private defaultChatId: string,
-    private timeoutMs: number = 60000
-  ) {}
+    private defaultChatId?: string,
+    timeoutMs: number = 30000
+  ) {
+    this.timeoutMs = timeoutMs;
+  }
 
   private getApiUrl(method: string): string {
-    return `https://api.telegram.org/bot${this.botToken}/${method}`;
+    return `${this.baseUrl}${this.botToken}/${method}`;
   }
 
   public async sendMessage(input: TelegramMessageInput): Promise<{ messageId: number }> {
@@ -26,20 +36,28 @@ export class RealTelegramService implements TelegramService {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
 
+    const postBody: Record<string, unknown> = {
+      chat_id: chatId,
+      text: input.text
+    };
+    if (input.parseMode) {
+      postBody.parse_mode = input.parseMode;
+    }
+
     try {
       const response = await fetch(this.getApiUrl('sendMessage'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: input.text,
-          parse_mode: input.parseMode || 'Markdown'
-        }),
+        body: JSON.stringify(postBody),
         signal: controller.signal
       });
 
       const data = (await response.json()) as { ok: boolean; result?: { message_id: number }; description?: string };
       if (!data.ok) {
+        if (data.description?.includes("can't parse entities") && input.parseMode) {
+          // Auto-fallback: Resend without any parse_mode (pure plain text) so it never fails!
+          return this.sendMessage({ text: input.text, chatId: input.chatId, parseMode: undefined });
+        }
         throw new Error(`Telegram sendMessage failed: ${data.description || 'Unknown error'}`);
       }
       return { messageId: data.result?.message_id || 0 };
@@ -82,6 +100,9 @@ export class RealTelegramService implements TelegramService {
 
       const data = (await response.json()) as { ok: boolean; result?: { message_id: number }; description?: string };
       if (!data.ok) {
+        if (data.description?.includes("can't parse entities") && input.parseMode) {
+          return this.sendVideo({ ...input, parseMode: undefined });
+        }
         throw new Error(`Telegram sendVideo failed: ${data.description || 'Unknown error'}`);
       }
       return { messageId: data.result?.message_id || 0 };
@@ -94,6 +115,10 @@ export class RealTelegramService implements TelegramService {
     const chatId = input.chatId || this.defaultChatId;
     if (!chatId) throw new Error('Telegram chatId is required');
     if (!this.botToken) throw new Error('Telegram botToken is required');
+
+    if (!fs.existsSync(input.documentPath)) {
+      throw new Error(`Document not found at: ${input.documentPath}`);
+    }
 
     const fileBuffer = fs.readFileSync(input.documentPath);
     const fileName = path.basename(input.documentPath);
@@ -146,7 +171,9 @@ export class RealTelegramService implements TelegramService {
     maxRetries: number,
     error: string
   ): Promise<void> {
-    const text = `⚠️ *STEP FAILED — RETRYING*\n\nJob: ${jobName}\nStep: ${step}\nRetry: ${retryCount}/${maxRetries}\nError: ${error}`;
+    const safeError = cleanMarkdown(error);
+    const safeStep = cleanMarkdown(step);
+    const text = `⚠️ *STEP FAILED — RETRYING*\n\nJob: ${jobName}\nStep: ${safeStep}\nRetry: ${retryCount}/${maxRetries}\nError: ${safeError}`;
     await this.sendMessage({ text, parseMode: 'Markdown' });
   }
 
@@ -174,7 +201,9 @@ export class RealTelegramService implements TelegramService {
     retryCount: number;
     error: string;
   }): Promise<void> {
-    const text = `❌ *JOB FAILED*\n\nJob: ${params.jobName}\nTopic: ${params.topic || 'N/A'}\nFailed Step: ${params.failedStep}\nRetries: ${params.retryCount}\nError: ${params.error}\n\nPlease check the desktop application logs.`;
+    const safeError = cleanMarkdown(params.error);
+    const safeStep = cleanMarkdown(params.failedStep);
+    const text = `❌ *JOB FAILED*\n\nJob: ${params.jobName}\nTopic: ${params.topic || 'N/A'}\nFailed Step: ${safeStep}\nRetries: ${params.retryCount}\nError: ${safeError}\n\nPlease check the desktop application logs.`;
     await this.sendMessage({ text, parseMode: 'Markdown' });
   }
 }

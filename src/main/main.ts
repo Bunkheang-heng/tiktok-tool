@@ -10,6 +10,7 @@ import { MockLlmProvider } from '../providers/llm/MockLlmProvider';
 import { GeminiLlmProvider } from '../providers/llm/GeminiLlmProvider';
 import { MockVideoGenerator } from '../providers/video/MockVideoGenerator';
 import { BrowserVideoGenerator } from '../providers/video/browser/BrowserVideoGenerator';
+import { NotebookLmAutomator } from '../providers/video/browser/NotebookLmAutomator';
 import { MockTtsProvider } from '../providers/tts/MockTtsProvider';
 import { KhmerTtsProvider } from '../providers/tts/KhmerTtsProvider';
 import { MockSubtitleService } from '../media/subtitles/MockSubtitleService';
@@ -25,9 +26,17 @@ let mainWindow: BrowserWindow | null = null;
 let trayManager: TrayManager | null = null;
 let isQuitting = false;
 
+process.on('uncaughtException', (err) => {
+  console.error('🔥 UNCAUGHT EXCEPTION:', err);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('🔥 UNHANDLED REJECTION:', err);
+});
+
 // Enforce single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
+  console.log('Another instance is already running. Quitting duplicate process.');
   app.quit();
 } else {
   app.on('second-instance', () => {
@@ -39,8 +48,9 @@ if (!gotTheLock) {
   });
 }
 
+
 async function createWindow() {
-  const dbService = getDatabaseService();
+  const dbService = await getDatabaseService();
   const config = dbService.settings.getAppConfig();
 
   // 1. Crash recovery: find and mark interrupted jobs from previous unclean shutdowns
@@ -69,8 +79,11 @@ async function createWindow() {
       : new MockLlmProvider();
 
   const videoGenerator =
-    !isMock && config.videoProvider === 'browser'
-      ? new BrowserVideoGenerator()
+    !isMock && (config.videoProvider === 'notebooklm' || config.videoProvider === 'browser')
+      ? new NotebookLmAutomator({
+          notebookUrl: config.notebookUrl || process.env.NOTEBOOK_URL,
+          headless: false
+        })
       : new MockVideoGenerator();
 
   const ttsProvider =
@@ -167,7 +180,10 @@ app.on('before-quit', () => {
   isQuitting = true;
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(createWindow).catch((err) => {
+  console.error('🔥 FATAL CREATE WINDOW ERROR:', err);
+});
+
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin' && isQuitting) {

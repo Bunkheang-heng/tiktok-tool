@@ -44,7 +44,8 @@ export class SettingRepository {
       telegramNotifyLevel: (s['TELEGRAM_NOTIFY_LEVEL'] as 'minimal' | 'normal' | 'detailed') || 'normal',
       geminiApiKey: s['GEMINI_API_KEY'] || '',
       geminiModel: s['GEMINI_MODEL'] || 'gemini-3.1-flash-lite',
-      videoProvider: (s['VIDEO_PROVIDER'] as 'mock' | 'browser' | 'api') || 'mock',
+      videoProvider: (s['VIDEO_PROVIDER'] as 'mock' | 'browser' | 'api' | 'notebooklm') || 'mock',
+      notebookUrl: s['NOTEBOOK_URL'] || 'https://notebook.google.com/notebook/2419265c-bfcb-4dfa-9ee8-52ad6926b5fa',
       ttsProvider: (s['TTS_PROVIDER'] as 'mock' | 'edge' | 'google') || 'mock',
       ttsVoice: s['TTS_VOICE'] || 'km-KH-SreymomNeural',
       ttsRate: parseFloat(s['TTS_RATE'] || '1.0'),
@@ -66,6 +67,7 @@ export class SettingRepository {
     if (config.geminiApiKey !== undefined) this.set('GEMINI_API_KEY', config.geminiApiKey);
     if (config.geminiModel !== undefined) this.set('GEMINI_MODEL', config.geminiModel);
     if (config.videoProvider !== undefined) this.set('VIDEO_PROVIDER', config.videoProvider);
+    if (config.notebookUrl !== undefined) this.set('NOTEBOOK_URL', config.notebookUrl);
     if (config.ttsProvider !== undefined) this.set('TTS_PROVIDER', config.ttsProvider);
     if (config.ttsVoice !== undefined) this.set('TTS_VOICE', config.ttsVoice);
     if (config.ttsRate !== undefined) this.set('TTS_RATE', String(config.ttsRate));

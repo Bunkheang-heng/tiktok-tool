@@ -20,8 +20,8 @@ export interface DatabaseService {
   close(): void;
 }
 
-export function createDatabaseService(dbPath: string = ':memory:'): DatabaseService {
-  const client = new DatabaseClient(dbPath);
+export async function createDatabaseService(dbPath: string = ':memory:'): Promise<DatabaseService> {
+  const client = await DatabaseClient.create(dbPath);
   client.runMigrations();
 
   const jobs = new JobRepository(client);
@@ -58,10 +58,10 @@ export function createDatabaseService(dbPath: string = ':memory:'): DatabaseServ
 
 let defaultService: DatabaseService | null = null;
 
-export function getDatabaseService(customDbPath?: string): DatabaseService {
+export async function getDatabaseService(customDbPath?: string): Promise<DatabaseService> {
   if (!defaultService) {
     const dbPath = customDbPath || path.resolve(process.cwd(), 'storage', 'ben10fx.db');
-    defaultService = createDatabaseService(dbPath);
+    defaultService = await createDatabaseService(dbPath);
     defaultService.seedIfEmpty();
   }
   return defaultService;

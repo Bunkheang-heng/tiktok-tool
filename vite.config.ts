@@ -14,8 +14,9 @@ export default defineConfig({
           build: {
             outDir: 'dist-electron',
             rollupOptions: {
-              external: ['better-sqlite3', 'fsevents']
+              external: ['sql.js', 'better-sqlite3', 'playwright', 'playwright-core', 'fsevents']
             }
+
           }
         }
       },

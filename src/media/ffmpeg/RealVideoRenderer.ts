@@ -69,32 +69,24 @@ export class RealVideoRenderer implements VideoRenderer {
       hasNarration = true;
     }
 
-    // Build video filter graph
-    // 1. Scale/crop to 1080x1920 vertical format
-    const filterParts: string[] = [
-      `scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase`,
-      `crop=${targetWidth}:${targetHeight}`,
-      `fps=${targetFps}`
-    ];
+    // Build video filter graph:
+    // Format 16:9 horizontal videos to 9:16 vertical TikTok layout with blurred background
+    let filterGraph = `[0:v]scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase,crop=${targetWidth}:${targetHeight},boxblur=20:5[bg];[0:v]scale=${targetWidth}:-1[fg];[bg][fg]overlay=0:(H-h)/2[v]`;
 
     // 2. Burn in subtitles if ASS file exists
     if (input.subtitlesAssPath && fs.existsSync(input.subtitlesAssPath)) {
-      // Escape Windows colon and backslashes for FFmpeg filter syntax
       const escapedSubPath = input.subtitlesAssPath.replace(/\\/g, '/').replace(/:/g, '\\:');
-      filterParts.push(`ass='${escapedSubPath}'`);
+      filterGraph = `[0:v]scale=${targetWidth}:${targetHeight}:force_original_aspect_ratio=increase,crop=${targetWidth}:${targetHeight},boxblur=20:5[bg];[0:v]scale=${targetWidth}:-1[fg];[bg][fg]overlay=0:(H-h)/2[base];[base]ass='${escapedSubPath}'[v]`;
     }
 
-    args.push('-vf', filterParts.join(','));
+    args.push('-filter_complex', filterGraph);
+    args.push('-map', '[v]');
 
     // Audio mapping: use narration audio (input 1) if provided
     if (hasNarration) {
-      args.push('-map', '0:v:0');
       args.push('-map', '1:a:0');
-    } else {
-      args.push('-map', '0:v:0');
-      if (!input.muteOriginalAudio) {
-        args.push('-map', '0:a:0?');
-      }
+    } else if (!input.muteOriginalAudio) {
+      args.push('-map', '0:a:0?');
     }
 
     // Video & Audio Codecs for high TikTok compatibility

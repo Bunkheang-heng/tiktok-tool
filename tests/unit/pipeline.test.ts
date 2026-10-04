@@ -17,8 +17,8 @@ describe('Milestone 5: Mock End-to-End Content Pipeline', () => {
   let telegram: MockTelegramService;
   const testStorageDir = path.resolve(process.cwd(), 'storage_test');
 
-  beforeEach(() => {
-    dbService = createDatabaseService(':memory:');
+  beforeEach(async () => {
+    dbService = await createDatabaseService(':memory:');
     dbService.seedIfEmpty();
 
     const stateMachine = new JobStateMachine(dbService.jobs, dbService.events);

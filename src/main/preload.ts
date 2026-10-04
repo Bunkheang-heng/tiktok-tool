@@ -10,6 +10,7 @@ export const API = {
   getJobDetails: (jobId: string) => ipcRenderer.invoke('jobs:get-by-id', jobId),
   generateNow: () => ipcRenderer.invoke('jobs:trigger-generate-now'),
   retryJob: (jobId: string) => ipcRenderer.invoke('jobs:retry', jobId),
+  cancelJob: (jobId: string, reason?: string) => ipcRenderer.invoke('jobs:cancel', jobId, reason),
   resendToTelegram: (jobId: string) => ipcRenderer.invoke('jobs:resend-telegram', jobId),
   openJobFolder: (jobId: string) => ipcRenderer.invoke('jobs:open-folder', jobId),
 

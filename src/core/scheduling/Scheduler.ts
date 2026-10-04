@@ -139,11 +139,13 @@ export class Scheduler {
 
     if (this.events?.onJobTriggered) {
       this.executionMutex = true;
-      try {
-        await this.events.onJobTriggered(job, null);
-      } finally {
-        this.executionMutex = false;
-      }
+      Promise.resolve(this.events.onJobTriggered(job, null))
+        .catch((err) => {
+          console.error(`Error executing triggered job ${job.id}:`, err);
+        })
+        .finally(() => {
+          this.executionMutex = false;
+        });
     }
 
     return job;

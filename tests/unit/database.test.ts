@@ -5,10 +5,11 @@ import { JobStatus } from '../../src/core/types/job';
 describe('Database and Repositories', () => {
   let dbService: DatabaseService;
 
-  beforeEach(() => {
-    dbService = createDatabaseService(':memory:');
+  beforeEach(async () => {
+    dbService = await createDatabaseService(':memory:');
     dbService.seedIfEmpty();
   });
+
 
   afterEach(() => {
     dbService.close();

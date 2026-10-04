@@ -58,10 +58,6 @@ export function registerIpcHandlers(ctx: IpcContext): void {
 
   ipcMain.handle('jobs:trigger-generate-now', async () => {
     const job = await scheduler.triggerGenerateNow();
-    // Run orchestrator asynchronously in background
-    orchestrator.executeJob(job.id, 'On-Demand Generation').catch((err) => {
-      console.error(`On-demand job execution error for ${job.id}:`, err);
-    });
     return job;
   });
 
@@ -74,6 +70,10 @@ export function registerIpcHandlers(ctx: IpcContext): void {
       console.error(`Manual retry error for ${job.id}:`, err);
     });
     return { success: true };
+  });
+
+  ipcMain.handle('jobs:cancel', async (_, jobId: string, reason?: string) => {
+    return orchestrator.cancelJob(jobId, reason);
   });
 
   ipcMain.handle('jobs:resend-telegram', async (_, jobId: string) => {

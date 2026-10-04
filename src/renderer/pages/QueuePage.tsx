@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { JobStatusBadge } from '../components/JobStatusBadge';
-import { FolderOpen, Send, RefreshCw, Eye, X } from 'lucide-react';
+import { FolderOpen, Send, RefreshCw, Eye, X, XCircle } from 'lucide-react';
 
 export const QueuePage: React.FC = () => {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -20,6 +20,14 @@ export const QueuePage: React.FC = () => {
     const interval = setInterval(loadJobs, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleCancel = async (jobId: string) => {
+    if (window.api && (window.api as any).cancelJob) {
+      await (window.api as any).cancelJob(jobId, 'Cancelled via UI');
+      await loadJobs();
+    }
+  };
+
 
   const handleOpenDetails = async (jobId: string) => {
     setSelectedJobId(jobId);
@@ -163,7 +171,18 @@ export const QueuePage: React.FC = () => {
                             <RefreshCw size={13} />
                           </button>
                         )}
+                        {!['DELIVERED', 'FAILED', 'FAILED_FINAL', 'CANCELLED'].includes(job.status) && (
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => handleCancel(job.id)}
+                            title="Cancel Job"
+                            style={{ padding: '5px 8px', color: '#f43f5e' }}
+                          >
+                            <XCircle size={13} />
+                          </button>
+                        )}
                       </div>
+
                     </td>
                   </tr>
                 ))

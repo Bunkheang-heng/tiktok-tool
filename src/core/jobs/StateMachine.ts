@@ -22,8 +22,8 @@ export const ALLOWED_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
   RENDERING: ['METADATA_GENERATING', 'FAILED', 'CANCELLED', 'INTERRUPTED'],
   METADATA_GENERATING: ['TELEGRAM_SENDING', 'FAILED', 'CANCELLED', 'INTERRUPTED'],
   TELEGRAM_SENDING: ['DELIVERED', 'FAILED', 'CANCELLED', 'INTERRUPTED'],
-  DELIVERED: ['TELEGRAM_SENDING'], // allows resending to Telegram
-  FAILED: ['RETRYING', 'FAILED_FINAL', 'CANCELLED'],
+  DELIVERED: ['TELEGRAM_SENDING', 'STARTING', 'RETRYING'], // allows resending or rerunning
+  FAILED: ['STARTING', 'RETRYING', 'FAILED', 'FAILED_FINAL', 'CANCELLED'],
   RETRYING: [
     'STARTING',
     'TOPIC_SELECTING',
@@ -37,9 +37,9 @@ export const ALLOWED_TRANSITIONS: Record<JobStatus, JobStatus[]> = {
     'FAILED',
     'CANCELLED'
   ],
-  FAILED_FINAL: ['RETRYING', 'STARTING'], // manual retry from UI
-  INTERRUPTED: ['RETRYING', 'STARTING', 'FAILED_FINAL', 'CANCELLED'],
-  CANCELLED: ['RETRYING', 'STARTING']
+  FAILED_FINAL: ['STARTING', 'RETRYING', 'FAILED_FINAL', 'FAILED', 'CANCELLED'],
+  INTERRUPTED: ['STARTING', 'RETRYING', 'FAILED_FINAL', 'FAILED', 'CANCELLED', 'INTERRUPTED'],
+  CANCELLED: ['STARTING', 'RETRYING', 'CANCELLED']
 };
 
 export class JobStateMachine {
@@ -49,6 +49,7 @@ export class JobStateMachine {
   ) {}
 
   public static canTransition(from: JobStatus, to: JobStatus): boolean {
+    if (from === to) return true;
     const allowed = ALLOWED_TRANSITIONS[from];
     return Array.isArray(allowed) && allowed.includes(to);
   }
@@ -69,9 +70,17 @@ export class JobStateMachine {
     }
 
     const currentStatus = job.status;
+    if (currentStatus === toStatus) {
+      if (options?.error) {
+        this.jobRepo.update(jobId, { lastError: options.error });
+      }
+      return this.jobRepo.findById(jobId)!;
+    }
+
     if (!JobStateMachine.canTransition(currentStatus, toStatus)) {
       throw new InvalidTransitionError(currentStatus, toStatus, jobId);
     }
+
 
     const updates: Partial<Omit<Job, 'id' | 'createdAt'>> = {
       status: toStatus

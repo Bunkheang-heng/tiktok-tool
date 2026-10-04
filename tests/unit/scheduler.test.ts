@@ -6,11 +6,12 @@ describe('Scheduler and Duplicate Protection', () => {
   let dbService: DatabaseService;
   let scheduler: Scheduler;
 
-  beforeEach(() => {
-    dbService = createDatabaseService(':memory:');
+  beforeEach(async () => {
+    dbService = await createDatabaseService(':memory:');
     dbService.seedIfEmpty();
     scheduler = new Scheduler(dbService.schedules, dbService.jobs);
   });
+
 
   afterEach(() => {
     scheduler.stop();

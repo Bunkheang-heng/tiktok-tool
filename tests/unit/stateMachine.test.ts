@@ -6,10 +6,11 @@ describe('JobStateMachine', () => {
   let dbService: DatabaseService;
   let stateMachine: JobStateMachine;
 
-  beforeEach(() => {
-    dbService = createDatabaseService(':memory:');
+  beforeEach(async () => {
+    dbService = await createDatabaseService(':memory:');
     stateMachine = new JobStateMachine(dbService.jobs, dbService.events);
   });
+
 
   afterEach(() => {
     dbService.close();

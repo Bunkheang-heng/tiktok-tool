@@ -12,7 +12,8 @@ export interface AppConfig {
   telegramNotifyLevel: 'minimal' | 'normal' | 'detailed';
   geminiApiKey: string;
   geminiModel: string;
-  videoProvider: 'mock' | 'browser' | 'api';
+  videoProvider: 'mock' | 'browser' | 'api' | 'notebooklm';
+  notebookUrl?: string;
   ttsProvider: 'mock' | 'edge' | 'google';
   ttsVoice: string;
   ttsRate: number;
@@ -23,3 +24,4 @@ export interface AppConfig {
   startWithWindows: boolean;
   minimizeToTray: boolean;
 }
+
